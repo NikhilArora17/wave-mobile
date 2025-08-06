@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wave Lines with Glowing Logos</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #ffffff;
+      height: 100%;
+      width: 100%;
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #logo,
+    #logo2 {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 0 50px #000000) drop-shadow(0 0 50px #000000);
+    }
+
+    #logo {
+      top: 50%;
+      width: 50px;
+      transform: translate(-50%, -50%);
+    }
+
+    #logo2 {
+      bottom: 40px;
+      width: 90px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <img id="logo" src="./logo.png" alt="Logo" />
+  <img id="logo2" src="./logo2.png" alt="Logo 2" />
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
