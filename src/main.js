@@ -73,7 +73,7 @@ function onWindowResize() {
 
 function animate(time) {
   requestAnimationFrame(animate);
-  const t = time * 0.00035;
+  const t = time * 0.00032;
 
   lines.forEach((line, lineIndex) => {
     const geometry = line.geometry;
