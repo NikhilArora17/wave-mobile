@@ -7,15 +7,13 @@ let scene, camera, renderer;
 const lines = [];
 const lineCount = 50;
 const segmentCount = 200;
-const width = window.innerWidth;
-const height = window.innerHeight;
 
-const sharedLeftX = -width / 1.5;
-const sharedRightX = width / 1.5;
+let width = window.innerWidth;
+let height = window.innerHeight;
 
-// 🛠️ Control parameters
-const bendStrength = 0.08;
-const maxDist = width / 0.5;
+let sharedLeftX = -width / 1.5;
+let sharedRightX = width / 1.5;
+let maxDist = width / 0.5;
 
 init();
 animate();
@@ -52,6 +50,25 @@ function init() {
     lines.push(line);
     scene.add(line);
   }
+
+  window.addEventListener('resize', onWindowResize);
+}
+
+function onWindowResize() {
+  width = window.innerWidth;
+  height = window.innerHeight;
+
+  sharedLeftX = -width / 1.5;
+  sharedRightX = width / 1.5;
+  maxDist = width / 0.5;
+
+  camera.left = -width / 2;
+  camera.right = width / 2;
+  camera.top = height / 2;
+  camera.bottom = -height / 2;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(width, height);
 }
 
 function animate(time) {
@@ -76,11 +93,7 @@ function animate(time) {
     for (let j = 0; j < 3; j++) {
       let x = sharedLeftX + ((j + 1) / 3) * (sharedRightX - sharedLeftX);
       let y = baseY + verticalOffset + noise.perlin2(j * freqOffset, t + timeOffset) * amplitude;
-
-      // Warp x inward toward center
-     x *= (2 - bendStrength);
-
-
+      x *= (2 - 0.08);
       midPoints.push(new THREE.Vector3(x, y, 0));
     }
 
@@ -97,7 +110,6 @@ function animate(time) {
 
     geometry.attributes.position.needsUpdate = true;
 
-    // Fade line opacity based on distance of center segment to middle (halo effect)
     const centerIndex = Math.floor(segmentCount / 2);
     const cx = curvePoints[centerIndex].x;
     const distToCenter = Math.abs(cx);
