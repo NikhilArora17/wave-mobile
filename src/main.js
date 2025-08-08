@@ -5,15 +5,20 @@ const noise = new Noise();
 
 let scene, camera, renderer;
 const lines = [];
-let lineCount = 45;
+let lineCount = 50;
 let segmentCount = 150;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-let sharedTopY = height / 1.5;
-let sharedBottomY = -height / 1.5;
-let maxDist = height / 0.5;
+let sharedLeftX = -width / 1.8;
+let sharedRightX = width / 1.5;
+let maxDist = width / 0.5;
+
+// Allow control via query parameters (optional)
+const urlParams = new URLSearchParams(window.location.search);
+lineCount = parseInt(urlParams.get('lines')) || lineCount;
+segmentCount = parseInt(urlParams.get('segments')) || segmentCount;
 
 init();
 animate();
@@ -31,15 +36,15 @@ function init() {
   renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('canvas'),
     antialias: true,
-    alpha: true
+    alpha: true,
   });
   renderer.setSize(width, height);
   renderer.autoClearColor = false;
-  renderer.setClearColor(0xffffff, 0.05);
+  renderer.setClearColor(0xffffff, 0.15);
 
   const material = new THREE.PointsMaterial({
     color: 0x6C6F7C,
-    size: 2.2,
+    size: 2.5,
     sizeAttenuation: true,
     transparent: true,
     opacity: 0.4,
@@ -82,9 +87,9 @@ function onWindowResize() {
   width = window.innerWidth;
   height = window.innerHeight;
 
-  sharedTopY = height / 1.5;
-  sharedBottomY = -height / 1.5;
-  maxDist = height / 0.5;
+  sharedLeftX = -width / 1.5;
+  sharedRightX = width / 1.5;
+  maxDist = width / 0.5;
 
   camera.left = -width / 2;
   camera.right = width / 2;
@@ -105,20 +110,24 @@ function animate(time) {
     const geometry = points.geometry;
     const positions = geometry.attributes.position.array;
 
-    const baseX = 0;
-    const amplitude = 150 + lineIndex * 18;
+    const baseY = 0;
+    const amplitude = (150 + lineIndex * 18) * (1 + lineIndex * 0.005);
 
-    const phaseShift = lineIndex * 0.2;
-    const horizontalOffset = Math.sin(t * 2 + phaseShift) * 12;
-    const verticalJitter = Math.sin(t * 1.5 + phaseShift) * 5;
 
-    const p0 = new THREE.Vector3(baseX + horizontalOffset, sharedBottomY + verticalJitter, 0);
-    const p4 = new THREE.Vector3(baseX + horizontalOffset, sharedTopY + verticalJitter, 0);
+    const parallaxScale = 1.4; // ← increase this to make depth stronger
+
+const phaseShift = lineIndex * 0.2;
+const verticalOffset = Math.sin(t * 2 + phaseShift) * 12 * (1 + lineIndex * parallaxScale * 0.115);
+const horizontalJitter = Math.sin(t * 1.5 + phaseShift) * 5 * (1 + lineIndex * parallaxScale * 0.115);
+
+
+    const p0 = new THREE.Vector3(sharedLeftX + horizontalJitter, baseY + verticalOffset, 0);
+    const p4 = new THREE.Vector3(sharedRightX + horizontalJitter, baseY + verticalOffset, 0);
 
     const midPoints = [];
     for (let j = 0; j < 3; j++) {
-      let y = sharedBottomY + ((j + 1) / 4) * (sharedTopY - sharedBottomY) + verticalJitter;
-      let x = baseX + horizontalOffset + noise.perlin2(j * (0.4 + lineIndex * 0.05), t + lineIndex * 0.07) * amplitude;
+      let x = sharedLeftX + ((j + 1) / 4) * (sharedRightX - sharedLeftX) + horizontalJitter;
+      let y = baseY + verticalOffset + noise.perlin2(j * (0.4 + lineIndex * 0.05), t + lineIndex * 0.07) * amplitude;
       midPoints.push(new THREE.Vector3(x, y, 0));
     }
 
@@ -136,11 +145,11 @@ function animate(time) {
     geometry.attributes.position.needsUpdate = true;
 
     const centerIndex = Math.floor(segmentCount / 2);
-    const cy = curvePoints[centerIndex].y;
-    const distToCenter = Math.abs(cy);
+    const cx = curvePoints[centerIndex].x;
+    const distToCenter = Math.abs(cx);
     const fade = 1.0 - Math.min(distToCenter / maxDist, 1);
 
-    points.material.opacity = 0.15 + 0.35 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
+    points.material.opacity = 0.20 + 0.30 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
   });
 
   renderer.render(scene, camera);
