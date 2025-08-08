@@ -6,12 +6,12 @@ const noise = new Noise();
 let scene, camera, renderer;
 const lines = [];
 let lineCount = 50;
-let segmentCount = 300;
+let segmentCount = 150;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-let sharedLeftX = -width / 1.5;
+let sharedLeftX = -width / 1.8;
 let sharedRightX = width / 1.5;
 let maxDist = width / 0.5;
 
@@ -111,11 +111,15 @@ function animate(time) {
     const positions = geometry.attributes.position.array;
 
     const baseY = 0;
-    const amplitude = 150 + lineIndex * 18;
+    const amplitude = (150 + lineIndex * 18) * (1 + lineIndex * 0.005);
 
-    const phaseShift = lineIndex * 0.2;
-    const verticalOffset = Math.sin(t * 2 + phaseShift) * 12;
-    const horizontalJitter = Math.sin(t * 1.5 + phaseShift) * 5;
+
+    const parallaxScale = 1.4; // ← increase this to make depth stronger
+
+const phaseShift = lineIndex * 0.2;
+const verticalOffset = Math.sin(t * 2 + phaseShift) * 12 * (1 + lineIndex * parallaxScale * 0.115);
+const horizontalJitter = Math.sin(t * 1.5 + phaseShift) * 5 * (1 + lineIndex * parallaxScale * 0.115);
+
 
     const p0 = new THREE.Vector3(sharedLeftX + horizontalJitter, baseY + verticalOffset, 0);
     const p4 = new THREE.Vector3(sharedRightX + horizontalJitter, baseY + verticalOffset, 0);
