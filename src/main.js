@@ -5,8 +5,8 @@ const noise = new Noise();
 
 let scene, camera, renderer;
 const lines = [];
-const lineCount = 50;
-const segmentCount = 200;
+let lineCount = 50;
+let segmentCount = 300;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -14,6 +14,11 @@ let height = window.innerHeight;
 let sharedLeftX = -width / 1.5;
 let sharedRightX = width / 1.5;
 let maxDist = width / 0.5;
+
+// Allow control via query parameters (optional)
+const urlParams = new URLSearchParams(window.location.search);
+lineCount = parseInt(urlParams.get('lines')) || lineCount;
+segmentCount = parseInt(urlParams.get('segments')) || segmentCount;
 
 init();
 animate();
@@ -31,27 +36,51 @@ function init() {
   renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('canvas'),
     antialias: true,
+    alpha: true,
   });
   renderer.setSize(width, height);
-  renderer.setClearColor(0xffffff);
+  renderer.autoClearColor = false;
+  renderer.setClearColor(0xffffff, 0.15);
 
-  const material = new THREE.LineBasicMaterial({
+  const material = new THREE.PointsMaterial({
     color: 0x6C6F7C,
+    size: 2.5,
+    sizeAttenuation: true,
     transparent: true,
-    opacity: 0.3,
+    opacity: 0.4,
+    map: createCircleTexture(),
+    alphaTest: 0.1,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
   });
 
   for (let i = 0; i < lineCount; i++) {
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(segmentCount * 3);
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const line = new THREE.Line(geometry, material.clone());
-    line.userData.index = i;
-    lines.push(line);
-    scene.add(line);
+    const points = new THREE.Points(geometry, material.clone());
+    points.userData.index = i;
+    lines.push(points);
+    scene.add(points);
   }
 
   window.addEventListener('resize', onWindowResize);
+}
+
+function createCircleTexture() {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
 }
 
 function onWindowResize() {
@@ -75,25 +104,26 @@ function animate(time) {
   requestAnimationFrame(animate);
   const t = time * 0.00032;
 
-  lines.forEach((line, lineIndex) => {
-    const geometry = line.geometry;
+  renderer.clearColor();
+
+  lines.forEach((points, lineIndex) => {
+    const geometry = points.geometry;
     const positions = geometry.attributes.position.array;
 
     const baseY = 0;
-    const amplitude = 170 + lineIndex * 32;
+    const amplitude = 150 + lineIndex * 18;
 
-    const verticalOffset = Math.sin(t + lineIndex * 1.2) * 10;
-    const freqOffset = 0.4 + lineIndex * 0.05;
-    const timeOffset = lineIndex * 0.07;
+    const phaseShift = lineIndex * 0.2;
+    const verticalOffset = Math.sin(t * 2 + phaseShift) * 12;
+    const horizontalJitter = Math.sin(t * 1.5 + phaseShift) * 5;
 
-    const p0 = new THREE.Vector3(sharedLeftX, baseY + verticalOffset, 0);
-    const p4 = new THREE.Vector3(sharedRightX, baseY + verticalOffset, 0);
+    const p0 = new THREE.Vector3(sharedLeftX + horizontalJitter, baseY + verticalOffset, 0);
+    const p4 = new THREE.Vector3(sharedRightX + horizontalJitter, baseY + verticalOffset, 0);
 
     const midPoints = [];
     for (let j = 0; j < 3; j++) {
-      let x = sharedLeftX + ((j + 1) / 3) * (sharedRightX - sharedLeftX);
-      let y = baseY + verticalOffset + noise.perlin2(j * freqOffset, t + timeOffset) * amplitude;
-      x *= (2 - 0.08);
+      let x = sharedLeftX + ((j + 1) / 4) * (sharedRightX - sharedLeftX) + horizontalJitter;
+      let y = baseY + verticalOffset + noise.perlin2(j * (0.4 + lineIndex * 0.05), t + lineIndex * 0.07) * amplitude;
       midPoints.push(new THREE.Vector3(x, y, 0));
     }
 
@@ -115,7 +145,7 @@ function animate(time) {
     const distToCenter = Math.abs(cx);
     const fade = 1.0 - Math.min(distToCenter / maxDist, 1);
 
-    line.material.opacity = 0.1 + 0.35 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
+    points.material.opacity = 0.20 + 0.30 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
   });
 
   renderer.render(scene, camera);
