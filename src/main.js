@@ -6,19 +6,14 @@ const noise = new Noise();
 let scene, camera, renderer;
 const lines = [];
 let lineCount = 50;
-let segmentCount = 150;
+let segmentCount = 300;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-let sharedLeftX = -width / 1.8;
+let sharedLeftX = -width / 1.5;
 let sharedRightX = width / 1.5;
 let maxDist = width / 0.5;
-
-// Allow control via query parameters (optional)
-const urlParams = new URLSearchParams(window.location.search);
-lineCount = parseInt(urlParams.get('lines')) || lineCount;
-segmentCount = parseInt(urlParams.get('segments')) || segmentCount;
 
 init();
 animate();
@@ -36,11 +31,11 @@ function init() {
   renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('canvas'),
     antialias: true,
-    alpha: true,
+    alpha: true
   });
   renderer.setSize(width, height);
   renderer.autoClearColor = false;
-  renderer.setClearColor(0xffffff, 0.15);
+  renderer.setClearColor(0xffffff, 0.05);
 
   const material = new THREE.PointsMaterial({
     color: 0x6C6F7C,
@@ -111,15 +106,11 @@ function animate(time) {
     const positions = geometry.attributes.position.array;
 
     const baseY = 0;
-    const amplitude = (150 + lineIndex * 18) * (1 + lineIndex * 0.005);
+    const amplitude = 150 + lineIndex * 30;
 
-
-    const parallaxScale = 1.4; // ← increase this to make depth stronger
-
-const phaseShift = lineIndex * 0.2;
-const verticalOffset = Math.sin(t * 2 + phaseShift) * 12 * (1 + lineIndex * parallaxScale * 0.115);
-const horizontalJitter = Math.sin(t * 1.5 + phaseShift) * 5 * (1 + lineIndex * parallaxScale * 0.115);
-
+    const phaseShift = lineIndex * 0.2;
+    const verticalOffset = Math.sin(t * 2 + phaseShift) * 12;
+    const horizontalJitter = Math.sin(t * 1.5 + phaseShift) * 5;
 
     const p0 = new THREE.Vector3(sharedLeftX + horizontalJitter, baseY + verticalOffset, 0);
     const p4 = new THREE.Vector3(sharedRightX + horizontalJitter, baseY + verticalOffset, 0);
@@ -149,7 +140,7 @@ const horizontalJitter = Math.sin(t * 1.5 + phaseShift) * 5 * (1 + lineIndex * p
     const distToCenter = Math.abs(cx);
     const fade = 1.0 - Math.min(distToCenter / maxDist, 1);
 
-    points.material.opacity = 0.20 + 0.30 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
+    points.material.opacity = 0.25 + 0.35 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
   });
 
   renderer.render(scene, camera);
