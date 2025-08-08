@@ -39,7 +39,7 @@ function init() {
 
   const material = new THREE.PointsMaterial({
     color: 0x6C6F7C,
-    size: 2.5,
+    size: 2.1,
     sizeAttenuation: true,
     transparent: true,
     opacity: 0.4,
