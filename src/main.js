@@ -6,7 +6,7 @@ const noise = new Noise();
 let scene, camera, renderer;
 const lines = [];
 let lineCount = 50;
-let segmentCount = 300;
+let segmentCount = 150;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -140,7 +140,7 @@ function animate(time) {
     const distToCenter = Math.abs(cx);
     const fade = 1.0 - Math.min(distToCenter / maxDist, 1);
 
-    points.material.opacity = 0.25 + 0.35 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
+    points.material.opacity = 0.15 + 0.35 * Math.sin(t * 4 + lineIndex * 0.4) * fade;
   });
 
   renderer.render(scene, camera);
