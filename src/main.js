@@ -3,17 +3,18 @@ import { Noise } from 'noisejs';
 
 const noise = new Noise();
 
+// ==== Fixed canvas size ====
+const WIDTH = 370;
+const HEIGHT = 710;
+
 let scene, camera, renderer;
 const lines = [];
-let lineCount = 50;
-let segmentCount = 150;
+let lineCount = 20;
+let segmentCount = 100;
 
-let width = window.innerWidth;
-let height = window.innerHeight;
-
-let sharedLeftX = -width / 1.5;
-let sharedRightX = width / 1.5;
-let maxDist = width / 0.5;
+let sharedLeftX = -WIDTH / 1.3;
+let sharedRightX = WIDTH / 1.3;
+let maxDist = WIDTH / 0.5;
 
 init();
 animate();
@@ -21,9 +22,10 @@ animate();
 function init() {
   scene = new THREE.Scene();
 
+  // Orthographic camera sized to fixed canvas
   camera = new THREE.OrthographicCamera(
-    -width / 2, width / 2,
-    height / 2, -height / 2,
+    -WIDTH / 2, WIDTH / 2,
+    HEIGHT / 2, -HEIGHT / 2,
     1, 1000
   );
   camera.position.z = 1;
@@ -33,13 +35,16 @@ function init() {
     antialias: true,
     alpha: true
   });
-  renderer.setSize(width, height);
+
+  // Lock internal buffer to 370x710 and avoid CSS scaling
+  renderer.setPixelRatio(1);            // keep crisp, no HiDPI scaling
+  renderer.setSize(WIDTH, HEIGHT, false); // false => don't touch CSS size
   renderer.autoClearColor = false;
   renderer.setClearColor(0xffffff, 0.05);
 
   const material = new THREE.PointsMaterial({
     color: 0x6C6F7C,
-    size: 2.1,
+    size: 0.2,
     sizeAttenuation: true,
     transparent: true,
     opacity: 0.4,
@@ -59,7 +64,7 @@ function init() {
     scene.add(points);
   }
 
-  window.addEventListener('resize', onWindowResize);
+  // No window resize listener — fixed size by design
 }
 
 function createCircleTexture() {
@@ -76,23 +81,6 @@ function createCircleTexture() {
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
-}
-
-function onWindowResize() {
-  width = window.innerWidth;
-  height = window.innerHeight;
-
-  sharedLeftX = -width / 1.5;
-  sharedRightX = width / 1.5;
-  maxDist = width / 0.5;
-
-  camera.left = -width / 2;
-  camera.right = width / 2;
-  camera.top = height / 2;
-  camera.bottom = -height / 2;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(width, height);
 }
 
 function animate(time) {
